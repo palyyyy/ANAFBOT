@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANAF e-Factura Downloader Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="glass-panel main-header">
+            <div class="logo-area">
+                <span class="logo-icon">📊</span>
+                <div class="logo-text">
+                    <h1>ANAF e-Factura</h1>
+                    <p>Automated PDF Downloader</p>
+                </div>
+            </div>
+            
+            <div id="connection-badge" class="badge badge-disconnected">
+                <span class="badge-dot"></span>
+                <span id="badge-text">Deconectat</span>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            
+            <!-- Left Panel: Configurations & Sync Trigger -->
+            <aside class="left-column">
+                
+                <!-- Settings Panel -->
+                <section class="glass-panel card">
+                    <h2 class="section-title"><span class="title-icon">⚙️</span> Setări Aplicație</h2>
+                    <form id="settings-form">
+                        <div class="form-group">
+                            <label for="cif">CUI / CIF Companie</label>
+                            <input type="text" id="cif" placeholder="Ex: 12345678" required>
+                            <span class="field-desc">Codul fiscal, fără prefixul RO și fără spații.</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="client_id">OAuth Client ID</label>
+                            <input type="text" id="client_id" placeholder="Copiați Client ID din portalul ANAF" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="client_secret">OAuth Client Secret</label>
+                            <input type="password" id="client_secret" placeholder="••••••••••••••••••••••••" required>
+                            <span class="field-desc">Obținute gratuit din contul de Dezvoltator ANAF.</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="label-with-toggle">
+                                <label for="test_mode">Mod de Lucru</label>
+                                <div class="toggle-container">
+                                    <span id="mode-status-text" class="mode-test">TEST (Sigur)</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="test_mode" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="test-dir-group">
+                            <label for="test_dir">Director TEST</label>
+                            <input type="text" id="test_dir" required>
+                            <span class="field-desc">Aici se vor descărca fișierele în Modul Test.</span>
+                        </div>
+
+                        <div class="form-group" id="target-dir-group">
+                            <label for="target_dir">Director LIVE (Drive local)</label>
+                            <input type="text" id="target_dir" required>
+                            <span class="field-desc">Locația oficială (Ex: D:\PALY S.R.L).</span>
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="invert_in_out" checked>
+                                <span class="checkmark"></span>
+                                <span class="checkbox-label">Aplică regula: <b>PRIMITE ➔ OUT</b> și <b>TRIMISE ➔ IN</b></span>
+                            </label>
+                            <span class="field-desc">Debifați dacă doriți inversarea lor (Regulă Contabilă Standard).</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="redirect_uri">OAuth Redirect URL înregistrat</label>
+                            <input type="text" id="redirect_uri" required>
+                            <span class="field-desc">Valoarea din profilul ANAF (Ex: http://localhost:8000/callback sau http://127.0.0.1:8000/callback).</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="folder_structure">Structură Foldere</label>
+                            <input type="text" id="folder_structure" required>
+                            <span class="field-desc">Șablon folder (implicit: <code>{year}/{month}/{direction}</code>). Variabile: {year}, {month}, {direction}, {cui}, {raw_month}.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="days">Zile Căutare ANAF (max 60)</label>
+                            <input type="number" id="days" min="1" max="60" value="30">
+                            <span class="field-desc">API-ul ANAF returnează doar mesaje din ultimele 60 de zile.</span>
+                        </div>
+
+                        <button type="submit" class="btn btn-secondary">Salvează Setările</button>
+                    </form>
+                </section>
+                
+                <!-- Help Panel -->
+                <section class="glass-panel card help-card">
+                    <h3 class="card-subtitle">🔑 Ghid Înregistrare Oauth</h3>
+                    <ol class="help-list">
+                        <li>Accesați portalul <a href="https://www.anaf.ro/InregOauth/Adaugare.xhtml" target="_blank">ANAF OAuth</a> cu tokenul USB conectat.</li>
+                        <li>Faceți clic pe secțiunea <b>"Editare profil Oauth"</b> (dacă nu este selectată deja).</li>
+                        <li>La <i>Callback URL 1</i>, introduceți adresa exactă:<br><code>http://127.0.0.1:8000/callback</code></li>
+                        <li>La <i>Serviciu</i>, selectați <b>DOAR "E-Factura"</b> (uncheck "E-Transport") pentru a evita o eroare internă 400.</li>
+                        <li>Faceți clic pe <b>Generare Client ID</b>. Detaliile înregistrării vor apărea în tabelul de sub formular!</li>
+                    </ol>
+                </section>
+            </aside>
+
+            <!-- Right Column: Control & Execution -->
+            <main class="right-column">
+                
+                <!-- Status & Action Card -->
+                <section class="glass-panel card action-card">
+                    <h2 class="section-title"><span class="title-icon">⚡</span> Panou Control Sync</h2>
+                    
+                    <div id="auth-status-container" class="status-summary">
+                        <div class="status-indicator">
+                            <div class="status-circle" id="status-circle"></div>
+                            <div>
+                                <h3 id="auth-title">Stare Conexiune: Se încarcă...</h3>
+                                <p id="auth-desc">Vă rugăm să configurați datele OAuth și CIF.</p>
+                            </div>
+                        </div>
+                        <button id="connect-btn" class="btn btn-primary" disabled>Conectează ANAF (Token USB)</button>
+                    </div>
+
+                    <hr class="card-divider">
+
+                    <div class="sync-controls">
+                        <div class="sync-input-row">
+                            <div class="form-group select-group">
+                                <label for="sync-year">An</label>
+                                <select id="sync-year">
+                                    <option value="ALL">Toți anii (Auto)</option>
+                                    <option value="2026" selected>2026</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group select-group">
+                                <label for="sync-month">Lună Facturi</label>
+                                <select id="sync-month">
+                                    <option value="ALL">Toate lunile (Auto)</option>
+                                    <option value="01">01 Ianuarie</option>
+                                    <option value="02">02 Februarie</option>
+                                    <option value="03">03 Martie</option>
+                                    <option value="04">04 Aprilie</option>
+                                    <option value="05">05 Mai</option>
+                                    <option value="06">06 Iunie</option>
+                                    <option value="07" selected>07 Iulie</option>
+                                    <option value="08">08 August</option>
+                                    <option value="09">09 Septembrie</option>
+                                    <option value="10">10 Octombrie</option>
+                                    <option value="11">11 Noiembrie</option>
+                                    <option value="12">12 Decembrie</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button id="sync-btn" class="btn btn-accent btn-large" disabled>
+                            🚀 Lansează Sincronizare Facturi PDF
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Live Logs Section -->
+                <section class="glass-panel card logs-card">
+                    <div class="logs-header">
+                        <h2 class="section-title"><span class="title-icon">📝</span> Jurnal Activitate (Live)</h2>
+                        <button id="clear-logs-btn" class="btn btn-text">Șterge Jurnal</button>
+                    </div>
+                    <div id="logs-box" class="console-box">
+                        <div class="log-line system-line">[Sistem] Pregătit pentru sincronizare locală. Selectați parametrii și porniți.</div>
+                    </div>
+                </section>
+
+                <!-- Results Table -->
+                <section class="glass-panel card results-card">
+                    <h2 class="section-title"><span class="title-icon">📂</span> Facturi Sincronizate Recent</h2>
+                    <div class="table-container">
+                        <table id="results-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Mesaj</th>
+                                    <th>Data Transmitere</th>
+                                    <th>Tip Document</th>
+                                    <th>Destinație (Cale)</th>
+                                    <th>Status Sync</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-body">
+                                <tr>
+                                    <td colspan="5" class="empty-table">Nu s-a rulat nicio sincronizare în această sesiune.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+            </main>
+            
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

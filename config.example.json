@@ -1,0 +1,18 @@
+{
+  "cif": "RO12345678",
+  "client_id": "PASTE_YOUR_ANAF_CLIENT_ID_HERE",
+  "client_secret": "PASTE_YOUR_ANAF_CLIENT_SECRET_HERE",
+  "target_dir": "D:\\Facturi_ANAF",
+  "test_dir": "d:\\ANAFBOT\\test_sync",
+  "test_mode": true,
+  "invert_in_out": true,
+  "redirect_uri": "http://localhost:8000/callback",
+  "folder_structure": "{year}/{month}/{direction}",
+  "days": 30,
+  "tokens": {
+    "access_token": "",
+    "refresh_token": "",
+    "access_expires_at": 0,
+    "refresh_expires_at": 0
+  }
+}
