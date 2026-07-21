@@ -11,6 +11,7 @@ ENV/
 
 # Configuration (contains private Client ID, Client Secret, CIF, and local directories)
 config.json
+*.pem
 
 # Local test folders and downloaded PDFs
 test_sync/
