@@ -1,7 +1,7 @@
 # ANAF e-Factura PDF Downloader Bot 🇷🇴 🇬🇧
 
-*   [Română](#-română)
-*   [English](#-english)
+*   [🇷🇴 Română](#-română)
+*   [🇬🇧 English](#-english)
 
 ---
 
